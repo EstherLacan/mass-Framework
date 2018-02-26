@@ -1,38 +1,46 @@
 define("scrollbar", ["css"], function($) {
-    function hasScrollBar(target, key) {
+    function hasScroll(el, a) {
         //判定是否存在水平或垂直滚动条
-        var val = target.css('overflow-' + key)
-        if(val == 'scroll') return true;
-        if(val == 'hidden') return false;
-        if(val == 'auto') {
-            var el = target[0],
-                method = key == 'y' ? 'Height' : 'Width';
-            return el['client' + method] < el['scroll' + method];
+        if ($(el).css("overflow") === "hidden") {
+            return false
         }
-        return false
+        var scroll = (a && a === "x") ? "scrollLeft" : "scrollTop"
+        if (el[ scroll ] > 0) {
+            return true
+        }
+        if (scroll === "scrollLeft") {
+          //  console.log(el.scrollWidth, el.clientWidth)
+            return el.scrollWidth > el.clientWidth //+ scrollbarHeight
+        } else {
+          //  console.log(el.scrollHeight, el.clientHeight)
+            return el.scrollHeight > el.clientHeight// + scrollbarHeight
+        }
     }
-    $.fn.hasScrollBar = function() {
+    $.fn.hasScroll = function() {
         //判定当前匹配的第一个元素是否存在滚动条
-        return isDisplayScrollBar(this, 'x') || isDisplayScrollBar(this, 'x');
-    }
-    $.getDefaultScrollBarWidth = function() {
-        //取得当前窗口默认的滚动条的宽度
-        if($.getDefaultScrollBarWidth.ret) {
-            return $.getDefaultScrollBarWidth.ret
-        }
-        var test = $('<div style="width: 100px;height: 100px;overflow: scroll;position: absolute;top: -9999px;"/>').appendTo("body");
-        var ret = test[0].offsetWidth - test[0].clientWidth;
+        return hasScroll(this, 'x') || hasScroll(this, 'x');
+    };
+    // calculate and return the scrollbar width, as an integer
+    var scrollbarHeight, scrollbarWidth;
+    (function () {
+        var test = $('<div style="position: absolute; top: -10000px; left: -10000px; width: 100px; height: 100px; overflow: scroll;"></div>').appendTo("body");
+        var node = test[0];
+        scrollbarHeight = node.offsetHeight - node.clientHeight;
+        scrollbarWidth = node.offsetWidth - node.clientWidth;
         test.remove();
-        return $.getDefaultScrollBarWidth.ret = ret;
-    }
-    $.getScrollBarWidth = function(node) {
+    })();
+    $.scrollbarWidth = function() {
+        return scrollbarWidth;
+    };
+    $.scrollbarHeight = function() {
+        return scrollbarHeight;
+    };
+    $.getScrollBar = function(node) {
         //获取当前元素的滚动条的消息
-        var target = $(node),
-            width = $.getDefaultScrollBarWidth();
         return {
-            x: hasScrollBar(target, 'x') ? width : 0,
-            y: hasScrollBar(target, 'y') ? width : 0
-        }
-    }
+            x: hasScrollBar(node, 'x') ? scrollbarWidth : 0,
+            y: hasScrollBar(node, 'y') ? scrollbarHeight : 0
+        };
+    };
     return $;
 });
